@@ -1,8 +1,7 @@
 pandas
 numpy
 scikit-learn
-matplotplib
+matplotlib
 seaborn
 requests
-math
 pybaseball 
