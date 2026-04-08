@@ -12,18 +12,18 @@ While intent is central to how pitching is taught and evaluated, it remains an u
 ---
 
 ## Data Pipeline
-The system is designed to handle high-volume, pitch-level **Statcast** data (~7.4 million pitches from 2015 to 2025) using a local OLAP setup.
+The system is designed to handle high-volume, pitch-level **Statcast** data (~7.4 million pitches from 2015 to 2025) using a local OLAP architecture.
 
 ### Data Architecture
 * **Sources:** Statcast pitch-level data via `pybaseball`, supplemented MLB API metadata.
 * **Storage:** **Apache Parquet** with Hive-style partitioning (`/year=/month=/`). 
-* **Database:** **DuckDB** for direct SQL queries on Parquet files.
+* **Database/Query Engine:** **DuckDB** for direct SQL queries on Parquet files.
 
 
 ### ETL Scripts
 * `download_statcast.py`: ingestiong and cleaning.
 * `download_mlbapi.py`: metadata enrichment.
-* `db.py`: Relational schema management.
+* `db.py`: schema definition and query utilities.
 
 > **[PLACEHOLDER: Architecture Diagram]**
 > *Future addition: Mermaid.js / LucidChart diagram showing the flow from Data source -> Parquet -> DuckDB -> Model.*
@@ -52,16 +52,39 @@ The system is designed to handle high-volume, pitch-level **Statcast** data (~7.
 - game context (scores, innings, runner on base, etc.)
 - proba distribution / heat map of different stratification 
 
-### 3. Modeling 
+### 3. Modeling Approach 
 *outline*
-- model pitch intent (intended location of a pitch) $\theta$ as a latent variable 
+- model pitch intent (intended location of a pitch) $\theta_i$ as a latent variable 
 - Bayesian framework
-  - prior: pitch type, proba distribuion of pitch landing location, etc.
-  - likelihood: probability of observed location (`plate_x` and `plate_z`) given intent $\theta$ and pitcher command variace $\sigma^2$
+  - prior: distribution of where the pitcher is likely trying to locate the pitch, conditioned on context. variables may include:
+    - pitch type
+    - pitcher/batter handedness
+    - count
+    - pitch sequence or just previous pitch type/location within the same at-bat
+    - game state
+    - pitcher-specific tendencies if exists 
+  - likelihood: the observed pitch location (`plate_x` and `plate_z`) is modeled as a noisy realization around the latent intended location $\theta_i$ where the variance reflects pitcher-specific execution error or command variability 
+  - posterior: the inferred distribution of intent location of a pitch after combining the context-based prior with the observed pitch location through likelihood
+- using posterior to decompose
+  - strategy: assessed by whether the inferred intent location aligns with historically favourable target zones given the context
+  - execution: assessed by the deviation between observed location and inferred intent
+  - randomness/uncontrollable factors: assessed by the difference between pitch quality and eventual outcome, after accounting for inferred intent and execution 
+
+### 4. Evaluation Metrics 
+Metrics translate the inferred latent intent into interpretatble measures of pitcher command, decision making, and possible outcome variability. 
+*outline; proposed metrics* 
+- execution metrics
+  - execution error (per pitch): euclidean distance between observed location and inferred intent
+  - average execution error (over a game or a season)
+  - execution variance: measures consistency vs volatility
+- strategy metrics (e.g., intent quality)
+
 
 
 > **[PLACEHOLDER: Mathematical Deep Dive]**
-> *Future addition: Link to Jupyter Notebook / LaTeX PDF explaining the MCMC sampling process and prior distributions.*
+> *Future addition:
+  > Mathematical expressions 
+  > Link to Jupyter Notebook / LaTeX PDF*
 
 ---
 
