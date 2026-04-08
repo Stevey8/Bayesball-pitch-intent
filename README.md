@@ -11,17 +11,18 @@ While intent is central to how pitching is taught and evaluated, it remains an u
 
 ---
 
-## Technical Stack & Data Pipeline
-The architecture is designed to handle high-volume, pitch-level Statcast data (7.4 million pitches from 2015 to 2025 seasons) using a local OLAP setup.
+## Data Pipeline
+The system is designed to handle high-volume, pitch-level **Statcast** data (~7.4 million pitches from 2015 to 2025) using a local OLAP setup.
 
 ### Data Architecture
-* **Sources:** Statcast pitch-level data via `pybaseball` & **MLB API** metadata.
-* **Storage:** **Parquet** with **Hive-style partitioning** (`/year=/month=/`).
-* **Database:** **DuckDB** for direct SQL analytical queries.
+* **Sources:** Statcast pitch-level data via `pybaseball`, supplemented MLB API metadata.
+* **Storage:** **Apache Parquet** with Hive-style partitioning (`/year=/month=/`). 
+* **Database:** **DuckDB** for direct SQL queries on Parquet files.
 
-### Core ETL Scripts
-* `download_statcast.py`: Automated retrieval and cleaning.
-* `download_mlbapi.py`: Player bios and game context.
+
+### ETL Scripts
+* `download_statcast.py`: ingestiong and cleaning.
+* `download_mlbapi.py`: metadata enrichment.
 * `db.py`: Relational schema management.
 
 > **[PLACEHOLDER: Architecture Diagram]**
@@ -29,22 +30,35 @@ The architecture is designed to handle high-volume, pitch-level Statcast data (7
 
 
 ### Overall Script Features 
-- logging for easy debugging
-- parquet storage: columnar storage to minimize I/O for multi season analysis, and hive style partitioning for ...
-- ...
+* **Columnar storage** with Parquet to enable efficient queries by readign only required columns.
+* **Partitioning** (year/month) reduces data scanned via partition pruning.
+* **Logging** supports pipeline monitoring and debugging 
 
 
 ---
 
-## Methodology
+## Methodology (WIP)
 
-### 1. Data Engineering & Schema
-*see the Technical Stack & Data Pipeline section above*
+### 1. Problem Framing 
+*outline*
+- pitch intent as latent variable
+- decomposition into strategy, execution, and randeomness or uncontrollable factors
 
-### 2. Bayesian Inference (Work in Progress)
-We model the intended location $\theta$ as a latent variable. 
-- **Prior:** 
-- **Likelihood:** Probability of observed location $(x, z)$ given intent $\theta$ and pitcher command variance $\sigma^2$.
+### 2. Data Preparation and EDA
+*outline*
+- matchup of different handedness (LHP/RHP vs LHH/RHH)
+- pitch type / movement profile context
+- pitch sequencing and count context
+- game context (scores, innings, runner on base, etc.)
+- proba distribution / heat map of different stratification 
+
+### 3. Modeling 
+*outline*
+- model pitch intent (intended location of a pitch) $\theta$ as a latent variable 
+- Bayesian framework
+  - prior: pitch type, proba distribuion of pitch landing location, etc.
+  - likelihood: probability of observed location (`plate_x` and `plate_z`) given intent $\theta$ and pitcher command variace $\sigma^2$
+
 
 > **[PLACEHOLDER: Mathematical Deep Dive]**
 > *Future addition: Link to Jupyter Notebook / LaTeX PDF explaining the MCMC sampling process and prior distributions.*
